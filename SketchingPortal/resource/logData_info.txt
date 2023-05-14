@@ -1,0 +1,2 @@
+This folder contains data retrieved while testing.
+It includes all the  buttons that were pressed, as well as all  Sketches (with their paths) and the results of recognition layer.
