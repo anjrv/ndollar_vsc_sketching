@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package is.nsn.sketching;
+
+service SketchingService {
+  rpc ParseSketch(ParseSketchRequest) returns (ParseSketchResponse);
+}
+
+message Point {
+  float x = 1;
+  float y = 2;
+}
+
+message ParseSketchRequest {
+  repeated Point points = 1;
+}
+
+message ParseSketchResponse {
+  enum Shape {
+    SHAPE_RECTANGLE = 0;
+    SHAPE_CIRCLE = 1;
+    // Add valid values here as we go on
+    SHAPE_UNSPECIFIED = 2;
+  }
+
+  // Starting XY point of the given shape
+  Point start = 1;
+
+  // Ending XY point of the given shape
+  Point end = 2;
+
+  // Shape that was drawn
+  Shape shape = 3;
+}
+
