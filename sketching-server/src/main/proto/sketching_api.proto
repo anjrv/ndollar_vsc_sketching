@@ -6,6 +6,8 @@ package is.nsn.sketching;
 
 service SketchingService {
   rpc ParseSketch(ParseSketchRequest) returns (ParseSketchResponse);
+
+  rpc AddTemplate(AddTemplateRequest) returns (AddTemplateResponse);
 }
 
 message Point {
@@ -13,8 +15,12 @@ message Point {
   float y = 2;
 }
 
-message ParseSketchRequest {
+message Stroke {
   repeated Point points = 1;
+}
+
+message ParseSketchRequest {
+  repeated Stroke strokes = 1;
 }
 
 message ParseSketchResponse {
@@ -35,3 +41,12 @@ message ParseSketchResponse {
   Shape shape = 3;
 }
 
+message AddTemplateRequest {
+  // The identifier to add the template to
+  string key = 1;
+
+  // The drawing that should match that key
+  repeated Stroke strokes = 2;
+}
+
+message AddTemplateResponse {}

@@ -6,14 +6,9 @@ import is.nsn.sketching.grpc.SketchingServiceImpl;
 
 import java.io.IOException;
 
-/**
- * Hello world!
- *
- */
-public class SketchingServer 
-{
-
-    public static void main( String[] args ) throws IOException, InterruptedException {
+public class SketchingServer {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        // TODO: Integrate with existing $N rewrite, logic to load stored templates from disk
         final int PORT = 8001;
 
         Server server = ServerBuilder
