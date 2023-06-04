@@ -36,3 +36,9 @@ button {
   padding: 0.5rem 1rem;
   font-weight: bold;
 }
+
+.canvas {
+  width: 500px;
+  height: 500px;
+  background-color: green;
+}
