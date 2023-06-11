@@ -22,7 +22,7 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>3.16.3</version>
+      <version>3.22.2</version>
     </dependency>
     <dependency>
         <groupId>io.grpc</groupId>
@@ -49,6 +49,11 @@
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
       <version>1.3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>20</version>
     </dependency>
   </dependencies>
 
@@ -135,6 +140,14 @@
               <mainClass>is.nsn.sketching.SketchingServer</mainClass>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-maven-plugin</artifactId>
+          <version>0.0.8</version>
+          <configuration>
+              <mainClass>HelloFX</mainClass>
+          </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
