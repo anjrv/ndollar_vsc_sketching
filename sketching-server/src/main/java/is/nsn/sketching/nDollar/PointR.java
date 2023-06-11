@@ -10,7 +10,28 @@ public class PointR {
         this.y = y;
     }
 
-    public PointR fromProto(Point proto) {
+    public PointR() {
+        this.x = 0;
+        this.y = 0;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    public static PointR fromProto(Point proto) {
         return new PointR(proto.getX(), proto.getY());
     }
 

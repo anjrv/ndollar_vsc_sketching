@@ -7,6 +7,10 @@ import is.nsn.sketching.ParseSketchRequest;
 import is.nsn.sketching.ParseSketchResponse;
 import is.nsn.sketching.Point;
 import is.nsn.sketching.SketchingServiceGrpc;
+import is.nsn.sketching.nDollar.MultistrokeR;
+import is.nsn.sketching.templates.Templates;
+
+import java.io.IOException;
 
 public class SketchingServiceImpl extends SketchingServiceGrpc.SketchingServiceImplBase {
 
@@ -28,11 +32,15 @@ public class SketchingServiceImpl extends SketchingServiceGrpc.SketchingServiceI
 
     @Override
     public void addTemplate(AddTemplateRequest request, StreamObserver<AddTemplateResponse> responseObserver) {
-        // TODO: Write stroke templates to disk and read them on launch
         System.out.println(request);
 
-        // Assuming success send an empty body
-        // For failure cases we probably want to throw an error here
+        String key = request.getKey();
+        try {
+            Templates.storeTemplate(key, MultistrokeR.fromProto(key, request.getStrokesList()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         AddTemplateResponse response = AddTemplateResponse.newBuilder().build();
 
         responseObserver.onNext(response);

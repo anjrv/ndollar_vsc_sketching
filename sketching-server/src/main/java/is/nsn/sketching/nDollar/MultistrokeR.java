@@ -1,6 +1,10 @@
 package is.nsn.sketching.nDollar;
 
+import is.nsn.sketching.Point;
+import is.nsn.sketching.Stroke;
+
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * MultiStroke is the equivalent of a Group of Strokes
@@ -83,6 +87,46 @@ public class MultistrokeR {
         } else {
             this.subGestures = new ArrayList<>();
         }
+    }
+
+    public MultistrokeR() {
+        this.Name = "";
+        ArrayList<PointR> points = new ArrayList<>();
+        this.OriginalGesture = new GestureR(points);
+        this.NumStrokes = 0;
+        this.subGestures = new ArrayList<>();
+    }
+
+    public String getName() {
+        return Name;
+    }
+
+    public void setName(String name) {
+        Name = name;
+    }
+
+    public int getNumStrokes() {
+        return NumStrokes;
+    }
+
+    public void setNumStrokes(int numStrokes) {
+        NumStrokes = numStrokes;
+    }
+
+    public ArrayList<GestureR> getSubGestures() {
+        return subGestures;
+    }
+
+    public void setSubGestures(ArrayList<GestureR> subGestures) {
+        this.subGestures = subGestures;
+    }
+
+    public GestureR getOriginalGesture() {
+        return OriginalGesture;
+    }
+
+    public void setOriginalGesture(GestureR originalGesture) {
+        OriginalGesture = originalGesture;
     }
 
     /**
@@ -180,5 +224,19 @@ public class MultistrokeR {
             resultingStroke.add(stroke.get(i));
         }
         return resultingStroke;
+    }
+
+    public static MultistrokeR fromProto(String name, List<Stroke> strokes) {
+        ArrayList<ArrayList<PointR>> originalPoints = new ArrayList<>();
+
+        for (Stroke s : strokes) {
+            ArrayList<PointR> points = new ArrayList<>();
+            for (Point p : s.getPointsList()) {
+                points.add(PointR.fromProto(p));
+            }
+            originalPoints.add(points);
+        }
+
+        return new MultistrokeR(name, originalPoints, false);
     }
 }

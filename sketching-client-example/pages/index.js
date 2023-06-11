@@ -3,29 +3,53 @@ import styles from '../styles/Home.module.css';
 import { useState, useCallback } from 'react';
 
 export default function Home() {
-  // Thoughts: This could also be an array of arrays so we retain the stroke format
-  const [points, setPoints] = useState([]);
+  const [strokes, setStrokes] = useState([]);
+  const [currentPoints, setCurrentPoints] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
 
   // TODO: Make this make real requests with mouse and touch event points
-  const parseRequest = useCallback((event) => {
-    event.preventDefault();
-    fetch(`/api/parseSketch`, {
-      method: 'POST',
-      body: JSON.stringify(points),
-    })
-      .then((res) => {
-        if (res.ok) {
-          return res.json();
-        } else {
-          throw new Error(JSON.stringify(res));
-        }
+  const parseRequest = useCallback(
+    (event) => {
+      event.preventDefault();
+      console.log(strokes);
+      fetch(`/api/parseSketch`, {
+        method: 'POST',
+        body: JSON.stringify(strokes),
       })
-      .then((data) => {
-        console.log(JSON.stringify(data));
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          } else {
+            throw new Error(JSON.stringify(res));
+          }
+        })
+        .then((data) => {
+          console.log(JSON.stringify(data));
+        })
+        .catch((err) => console.error(err));
+    },
+    [strokes]
+  );
+
+  const templateRequest = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const key = prompt('Enter the name of this shape');
+
+      fetch(`/api/addTemplate`, {
+        method: 'POST',
+        body: JSON.stringify({ strokes, key }),
       })
-      .catch((err) => console.error(err));
-  }, []);
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(JSON.stringify(res));
+          }
+        })
+        .catch((err) => console.error(err));
+    },
+    [strokes]
+  );
 
   const resolveLocalMouseTarget = (evt) => {
     const clientRect = evt.target.getBoundingClientRect();
@@ -42,7 +66,7 @@ export default function Home() {
     }
 
     setIsDrawing(true);
-    setPoints((points) => [...points, resolveLocalMouseTarget(evt)]);
+    setCurrentPoints((points) => [...points, resolveLocalMouseTarget(evt)]);
   };
 
   const handleMouseMove = (evt) => {
@@ -50,14 +74,13 @@ export default function Home() {
       return;
     }
 
-    setPoints((points) => [...points, resolveLocalMouseTarget(evt)]);
+    setCurrentPoints((points) => [...points, resolveLocalMouseTarget(evt)]);
   };
 
   const handleMouseUp = () => {
     setIsDrawing(false);
-
-    // Format example
-    // console.log(JSON.stringify(points));
+    setStrokes((strokes) => [...strokes, { points: [...currentPoints] }]);
+    setCurrentPoints([]);
   };
 
   const accumulatePolyline = (pointString, point) => {
@@ -92,7 +115,17 @@ export default function Home() {
             <button
               className={styles.button}
               type='button'
-              onClick={() => setPoints([])}
+              onClick={(e) => templateRequest(e)}
+            >
+              Add as template
+            </button>
+            <button
+              className={styles.button}
+              type='button'
+              onClick={() => {
+                setCurrentPoints([]);
+                setStrokes([]);
+              }}
             >
               Clear
             </button>
@@ -107,14 +140,23 @@ export default function Home() {
             // onTouchMove={handleTouchMove}
             // onTouchEnd={handleTouchEnd}
           >
-            {points.length > 0 && (
+            {(currentPoints.length > 0 || strokes.length > 0) && (
               <svg className={styles.sketch}>
                 <polyline
-                  points={`${points.reduce(accumulatePolyline, '')}`}
+                  points={`${currentPoints.reduce(accumulatePolyline, '')}`}
                   stroke='red'
                   strokeWidth='2'
                   fill='none'
                 ></polyline>
+                {strokes.map((stroke, idx) => (
+                  <polyline
+                    key={idx}
+                    points={`${stroke.points.reduce(accumulatePolyline, '')}`}
+                    stroke='red'
+                    strokeWidth='2'
+                    fill='none'
+                  ></polyline>
+                ))}
               </svg>
             )}
           </div>

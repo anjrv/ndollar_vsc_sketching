@@ -4,12 +4,12 @@
 import { grpcClient } from '../../lib/grpcClient';
 
 export default async function handler(req, res) {
-  try {
-    const parsed = await grpcClient.parseSketch({
-      strokes: JSON.parse(req.body),
-    });
+  const request = JSON.parse(req.body);
 
-    res.status(200).json({ parsed });
+  try {
+    await grpcClient.addTemplate(request);
+
+    res.status(200).end();
   } catch (err) {
     console.log(err);
     return res.status(500).send({ success: false });
