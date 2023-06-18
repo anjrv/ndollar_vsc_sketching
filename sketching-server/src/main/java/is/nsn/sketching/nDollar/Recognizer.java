@@ -61,7 +61,7 @@ public class Recognizer {
         try {
             Hashtable<String, ArrayList<ArrayList<PointR>>> templates = Templates.getTemplates();
             for (Map.Entry<String, ArrayList<ArrayList<PointR>>> template : templates.entrySet()) {
-                _gestures.put(template.getKey(), new MultistrokeR(template.getKey(), template.getValue(), true));
+                addTemplate(template.getKey(), template.getValue());
             }
 
             System.out.println("Recognizer loaded " + _gestures.size() + " templates");
@@ -250,6 +250,10 @@ public class Recognizer {
             }
         }
         return false;
+    }
+
+    public void addTemplate(String name, ArrayList<ArrayList<PointR>> points) {
+        _gestures.put(name, new MultistrokeR(name, points, true));
     }
 
     // public ArrayList<JSONData> startRecognitionOf(ArrayList<StrokeR> listOfStrokesFromCanvas){

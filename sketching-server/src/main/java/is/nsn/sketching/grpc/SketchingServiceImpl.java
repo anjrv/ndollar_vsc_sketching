@@ -2,7 +2,9 @@ package is.nsn.sketching.grpc;
 
 import io.grpc.stub.StreamObserver;
 import is.nsn.sketching.*;
-import is.nsn.sketching.nDollar.*;
+import is.nsn.sketching.nDollar.BestListR;
+import is.nsn.sketching.nDollar.PointR;
+import is.nsn.sketching.nDollar.Recognizer;
 import is.nsn.sketching.templates.Templates;
 
 import java.io.IOException;
@@ -18,7 +20,7 @@ public class SketchingServiceImpl extends SketchingServiceGrpc.SketchingServiceI
 
         for (Stroke s : strokes) {
             for (Point p : s.getPointsList()) {
-               points.add(PointR.fromProto(p));
+                points.add(PointR.fromProto(p));
             }
         }
 
@@ -40,16 +42,18 @@ public class SketchingServiceImpl extends SketchingServiceGrpc.SketchingServiceI
     public void addTemplate(AddTemplateRequest request, StreamObserver<AddTemplateResponse> responseObserver) {
         String key = request.getKey();
 
-       List<Stroke> strokes = request.getStrokesList();
-       ArrayList<ArrayList<PointR>> points = new ArrayList<>();
+        List<Stroke> strokes = request.getStrokesList();
+        ArrayList<ArrayList<PointR>> points = new ArrayList<>();
 
         for (Stroke s : strokes) {
             ArrayList<PointR> stroke = new ArrayList<>();
             for (Point p : s.getPointsList()) {
-               stroke.add(PointR.fromProto(p));
+                stroke.add(PointR.fromProto(p));
             }
             points.add(stroke);
         }
+
+        Recognizer.getInstance().addTemplate(key, points);
 
         try {
             Templates.storeTemplate(key, points);
