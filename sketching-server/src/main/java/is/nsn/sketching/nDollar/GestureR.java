@@ -94,63 +94,6 @@ public class GestureR {
         this.VectorVersion = Vectorize(this.pointRS);
     }
 
-    public GestureR() {
-        this.rawPointRS = new ArrayList<>();
-        this.pointRS = new ArrayList<>();
-        this.Is1D = false;
-        this.StartUnitVector = new PointR(0, 0);
-        this.VectorVersion = new ArrayList<>();
-        this.NumResamplePoints = 0;
-    }
-
-    public ArrayList<PointR> getRawPointRS() {
-        return rawPointRS;
-    }
-
-    public void setRawPointRS(ArrayList<PointR> rawPointRS) {
-        this.rawPointRS = rawPointRS;
-    }
-
-    public ArrayList<PointR> getPointRS() {
-        return pointRS;
-    }
-
-    public void setPointRS(ArrayList<PointR> pointRS) {
-        this.pointRS = pointRS;
-    }
-
-    public boolean isIs1D() {
-        return Is1D;
-    }
-
-    public void setIs1D(boolean is1D) {
-        Is1D = is1D;
-    }
-
-    public PointR getStartUnitVector() {
-        return StartUnitVector;
-    }
-
-    public void setStartUnitVector(PointR startUnitVector) {
-        StartUnitVector = startUnitVector;
-    }
-
-    public ArrayList<Double> getVectorVersion() {
-        return VectorVersion;
-    }
-
-    public void setVectorVersion(ArrayList<Double> vectorVersion) {
-        VectorVersion = vectorVersion;
-    }
-
-    public int getNumResamplePoints() {
-        return NumResamplePoints;
-    }
-
-    public void setNumResamplePoints(int numResamplePoints) {
-        NumResamplePoints = numResamplePoints;
-    }
-
     /**
      * Vector Representative of the List of Points
      * will have twice the size of it (192 instead of 96)

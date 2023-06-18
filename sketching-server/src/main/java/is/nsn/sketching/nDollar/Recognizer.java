@@ -1,39 +1,13 @@
 package is.nsn.sketching.nDollar;
 
+import is.nsn.sketching.templates.Templates;
 import javafx.util.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Map;
 
 public class Recognizer {
-
-    /**
-     * Variables used throughout the recognition process
-     */
-    private static final double DX = 250.0;
-
-    /**
-     * Lower limit of a shape.
-     * If the recognition score is above this value, the shape is a good candidate for the recognized shape.
-     * Otherwise, the group will automatically be recognized as TEXT
-     */
-    private static final double BARE_MINIMUM_SCORE_TO_BE_CONSIDERED_A_SHAPE = 0.65;
-
-    /**
-     * Resampling Scale [250 x 250 pixels]
-     */
-    public static SizeR ResampleScale = new SizeR(DX, DX);
-
-    /**
-     * origin point of the resampling box
-     * Meaning that the group that will be recognized will shifted so its root will be moved in this point
-     */
-    public static PointR ResampleOrigin = new PointR(0, 0);
-
-    /**
-     * threshold for the ratio between short-side and long-side of a gesture;
-     * empirically determined
-     */
-    public static double _1DThreshold = 0.30;
 
     /**
      * Represents the Minimum temporal distance between 2 strokes that defines if those are considered [temporally] close enough.
@@ -41,27 +15,60 @@ public class Recognizer {
      * Decided to be 650 after repeatedly testing the grouping algorithm
      */
     public static final int MAX_TIME_BETWEEN_STROKES_IN_A_GROUP = 650;
+    /**
+     * Variables used throughout the recognition process
+     */
+    private static final double DX = 250.0;
+    /**
+     * Lower limit of a shape.
+     * If the recognition score is above this value, the shape is a good candidate for the recognized shape.
+     * Otherwise, the group will automatically be recognized as TEXT
+     */
+    private static final double BARE_MINIMUM_SCORE_TO_BE_CONSIDERED_A_SHAPE = 0.65;
+    /**
+     * Resampling Scale [250 x 250 pixels]
+     */
+    public static SizeR ResampleScale = new SizeR(DX, DX);
+    /**
+     * origin point of the resampling box
+     * Meaning that the group that will be recognized will shifted so its root will be moved in this point
+     */
+    public static PointR ResampleOrigin = new PointR(0, 0);
+    /**
+     * threshold for the ratio between short-side and long-side of a gesture;
+     * empirically determined
+     */
+    public static double _1DThreshold = 0.30;
 
     /*
      * End of Variables
      */
-
-    /**
-     * List of all the Templates used for the recognition
-     */
-    private Hashtable<String, MultistrokeR> _gestures;
-
     /**
      * Singleton Instance
      */
     private static Recognizer instance;
+    /**
+     * List of all the Templates used for the recognition
+     */
+    private final Hashtable<String, MultistrokeR> _gestures;
 
     /**
      * Constructor
      */
     private Recognizer() {
-        // _gestures = new Hashtable<String, MultistrokeR>(256);
-        // LoadGestures();
+        _gestures = new Hashtable<>(100);
+
+        try {
+            Hashtable<String, ArrayList<ArrayList<PointR>>> templates = Templates.getTemplates();
+            for (Map.Entry<String, ArrayList<ArrayList<PointR>>> template : templates.entrySet()) {
+                _gestures.put(template.getKey(), new MultistrokeR(template.getKey(), template.getValue(), true));
+            }
+
+            System.out.println("Recognizer loaded " + _gestures.size() + " templates");
+        } catch (Exception e) {
+            System.out.println("Could not get templates");
+            throw new RuntimeException(e);
+        }
 
         // File currentDirFile = new File(".");
         // String absPathToDirectory="";
@@ -96,10 +103,11 @@ public class Recognizer {
 
     /**
      * getter for the Instance
+     *
      * @return the Singleton distance
      */
     public static Recognizer getInstance() {
-        if(instance == null)
+        if (instance == null)
             instance = new Recognizer();
         return instance;
     }
@@ -107,11 +115,12 @@ public class Recognizer {
     /**
      * Function checking if the distance from two different groups is small
      * That includes both their intersection, overlapping, and not intersecting but being just spatially within a short range
+     *
      * @param group1 the first group
      * @param group2 the second group
      * @return whether the groups are close or not
      */
-    private static boolean distanceBetweenExtremitiesOfGroupsIsSmall(ArrayList<StrokeR> group1, ArrayList<StrokeR> group2){
+    private static boolean distanceBetweenExtremitiesOfGroupsIsSmall(ArrayList<StrokeR> group1, ArrayList<StrokeR> group2) {
         for (StrokeR r : group1) {
             for (StrokeR strokeR : group2) {
                 if (Utils.strokesHaveExtremitiesClose(r, strokeR)) {
@@ -127,28 +136,29 @@ public class Recognizer {
      * The process of doing so looks like this:
      * - initially, it finds the strokes which have extremities close to one another (Box made out of 4 strokes, for example)
      * - finally, if groups are within a short temporal AND spatial distance, they are merged together
+     *
      * @param initialGrouping the initial groups, from the Storage, forming an Array of Arrays of Strokes, where there is exactly one Stroke per group (Array)
      */
-    private static void createTheGroupsOfStrokes(ArrayList<ArrayList<StrokeR>> initialGrouping){
+    private static void createTheGroupsOfStrokes(ArrayList<ArrayList<StrokeR>> initialGrouping) {
         // the idea for the new approach is to first connect the groups that are physically close to one another
         //System.out.println("Grouping started");
         // variable confirming that shifts happened in the previous stage
         boolean shiftsHappened = true;
 
-        while(shiftsHappened) {
+        while (shiftsHappened) {
             // it is assumed that no shift will happen in this stage.
             shiftsHappened = false;
-            if(initialGrouping.size() == 1){
+            if (initialGrouping.size() == 1) {
                 //System.out.println("Skip the grouping. only 1 group left");
                 break;
             }
 
             // groups the strokes which have their extremities close to one another
-            for (int i = 0 ; i < initialGrouping.size() - 1 ; i++) {
-                for (int j = i + 1 ; j < initialGrouping.size() ; j++) {
+            for (int i = 0; i < initialGrouping.size() - 1; i++) {
+                for (int j = i + 1; j < initialGrouping.size(); j++) {
                     // if the distance between the extremities of any stroke from these 2 groups is small enough
                     // or if the groups intersect in any way, for more than 50% of a size
-                    if(distanceBetweenExtremitiesOfGroupsIsSmall(initialGrouping.get(i), initialGrouping.get(j))){
+                    if (distanceBetweenExtremitiesOfGroupsIsSmall(initialGrouping.get(i), initialGrouping.get(j))) {
                         //shift group J into group I
                         initialGrouping.get(i).addAll(initialGrouping.get(j));
                         // remove group j
@@ -168,8 +178,8 @@ public class Recognizer {
         for (int i = 0; i < initialGrouping.size() - 1; i++) {
             for (int j = i + 1; j < initialGrouping.size(); j++) {
                 // The temporal distance is needed to avoid cases such: text within a box. if the temporal check isn't added, the text would be included inside the box's group, and will result into a misclassification (and only one result, instead of 2)
-                if(groupsAreInSpatialProximity(initialGrouping.get(i), initialGrouping.get(j)) &&
-                groupsAreInTemporalProximity(initialGrouping.get(i), initialGrouping.get(j))){
+                if (groupsAreInSpatialProximity(initialGrouping.get(i), initialGrouping.get(j)) &&
+                        groupsAreInTemporalProximity(initialGrouping.get(i), initialGrouping.get(j))) {
                     //shift group J into group I
                     initialGrouping.get(i).addAll(initialGrouping.get(j));
                     // remove group j
@@ -188,8 +198,8 @@ public class Recognizer {
      * <p>
      * For a given group, it finds its root, height and width
      */
-    private static Pair<PointR, Pair<Double, Double>> getBoundingBoxOfGroup(ArrayList<StrokeR> providedGroup){
-        PointR root = new PointR(0,0);
+    private static Pair<PointR, Pair<Double, Double>> getBoundingBoxOfGroup(ArrayList<StrokeR> providedGroup) {
+        PointR root = new PointR(0, 0);
         double height, width;
 
         double leftMostLimit = Utils.getTypeMostLimitOfGroup(providedGroup, "Left"),
@@ -206,11 +216,12 @@ public class Recognizer {
 
     /**
      * Function returning whether the two groups are physically in each other's proximity
+     *
      * @param group1 the first group
      * @param group2 the second group
      * @return TRUE if the groups are in their physical proximity, FALSE otherwise
      */
-    private static boolean groupsAreInSpatialProximity(ArrayList<StrokeR> group1, ArrayList<StrokeR> group2){
+    private static boolean groupsAreInSpatialProximity(ArrayList<StrokeR> group1, ArrayList<StrokeR> group2) {
         for (StrokeR r : group1) {
             for (StrokeR strokeR : group2) {
                 // if the groups are within a short distance, or if they intersect
@@ -224,11 +235,12 @@ public class Recognizer {
 
     /**
      * Function returning whether the two groups are temporally in each other's proximity  aaa
+     *
      * @param group1 the first group
      * @param group2 the second group
      * @return TRUE if the groups are in their temporal proximity, FALSE otherwise
      */
-    private static boolean groupsAreInTemporalProximity(ArrayList<StrokeR> group1, ArrayList<StrokeR> group2){
+    private static boolean groupsAreInTemporalProximity(ArrayList<StrokeR> group1, ArrayList<StrokeR> group2) {
         for (StrokeR r : group1) {
             for (StrokeR strokeR : group2) {
                 if (Math.abs(strokeR.getTimeStopDrawing().getTime() - r.getTimeStartDrawing().getTime()) <= (MAX_TIME_BETWEEN_STROKES_IN_A_GROUP) ||
@@ -399,11 +411,11 @@ public class Recognizer {
     /**
      * Function which recognizes a provided list of points (representing a Multi-Stroke/List-of-Strokes added by the user)
      *
-     * @param points List of Points representing the Strokes drawn by the user (in a 'merged' version)
+     * @param points     List of Points representing the Strokes drawn by the user (in a 'merged' version)
      * @param numStrokes Number of strokes in the initial drawing. Now used tho
      * @return the List of results (with their scores), based on already-existing templates.
      */
-    private BestListR Recognize(ArrayList<PointR> points, int numStrokes) {
+    public BestListR recognize(ArrayList<PointR> points, int numStrokes) {
         // removed the candidate transformations by creating a Gesture here
         // of the input points
         // this helps keep the transformations done to templates and candidates the same
@@ -419,15 +431,13 @@ public class Recognizer {
         // each sub-gesture in our set of MultiStrokes
 
         /* For every template in the Template DataBase*/
-        for(MultistrokeR ms : _gestures.values())
-        {
+        for (MultistrokeR ms : _gestures.values()) {
             // initiate the local list of results with an empty list
             // this Multi Stroke nbest
             BestListR thisMSnbest = new BestListR(); // store the best list for just this MS
 
             // for each combination of ordering/direction of the strokes created within every template
-            for (GestureR p : ms.subGestures)
-            {
+            for (GestureR p : ms.subGestures) {
                 double score;
                 double best;
 
@@ -446,7 +456,7 @@ public class Recognizer {
             // add the one that was best of those sub-gestures
             // these properties return the property of the top result
             String nameOfResult = thisMSnbest.getNameOfTopResult();
-            if(nameOfResult.contains("_")){
+            if (nameOfResult.contains("_")) {
                 nameOfResult = nameOfResult.split("_")[0];
             }
             double scoreOfResult = thisMSnbest.getScoreOfTopResult();
@@ -454,11 +464,11 @@ public class Recognizer {
         }
 
         // adding the Heuristic Enclosure recognition;
-        if(numStrokes == 1) {
+        if (numStrokes == 1) {
             // create a stroke with the points
             StrokeR equivalentStroke = new StrokeR();
             equivalentStroke.beginPath(new PointR(points.get(0).x, points.get(0).y));
-            for(int i = 1 ; i < points.size() ; i++){
+            for (int i = 1; i < points.size(); i++) {
                 equivalentStroke.addPointToPath(new PointR(points.get(i).x, points.get(i).y));
             }
             equivalentStroke.finishPath();
@@ -466,7 +476,7 @@ public class Recognizer {
             equivalentListOfStrokes.add(equivalentStroke);
 
             double enclosureScoreHeuristics = Utils.getEnclosureScoreHeuristics(equivalentListOfStrokes);
-            nbest.AddResult("Enclosure",enclosureScoreHeuristics);
+            nbest.AddResult("Enclosure", enclosureScoreHeuristics);
         }
         // Sort the Actual results and return them
         nbest.SortDescending();
@@ -485,8 +495,7 @@ public class Recognizer {
         double a = 0;
         double b = 0;
 
-        for (int i = 0; i < v1.size(); i = i + 2)
-        {
+        for (int i = 0; i < v1.size(); i = i + 2) {
             a += v1.get(i) * v2.get(i) + v1.get(i + 1) * v2.get(i + 1);
             b += v1.get(i) * v2.get(i + 1) - v1.get(i + 1) * v2.get(i);
         }

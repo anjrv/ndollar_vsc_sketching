@@ -39,6 +39,8 @@ message ParseSketchResponse {
 
   // Shape that was drawn
   Shape shape = 3;
+
+  string debug = 4;
 }
 
 message AddTemplateRequest {

@@ -6,12 +6,13 @@ export default function Home() {
   const [strokes, setStrokes] = useState([]);
   const [currentPoints, setCurrentPoints] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [result, setResult] = useState('');
 
   // TODO: Make this make real requests with mouse and touch event points
   const parseRequest = useCallback(
     (event) => {
       event.preventDefault();
-      console.log(strokes);
+      setResult('');
       fetch(`/api/parseSketch`, {
         method: 'POST',
         body: JSON.stringify(strokes),
@@ -24,6 +25,7 @@ export default function Home() {
           }
         })
         .then((data) => {
+          setResult(data.parsed.debug);
           console.log(JSON.stringify(data));
         })
         .catch((err) => console.error(err));
@@ -161,6 +163,7 @@ export default function Home() {
             )}
           </div>
         </form>
+        {result && <p>{`Best match using loaded templates: ${result}`}</p>}
       </main>
     </div>
   );
