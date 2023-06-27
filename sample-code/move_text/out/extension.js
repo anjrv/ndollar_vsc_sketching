@@ -17,14 +17,9 @@ function activate(context) {
             if (editor) {
                 let lines = [];
                 const lineCount = editor.document.lineCount;
-                const requiredlineCount = movePos.line;
+                const requiredlineCount = movePos.line + (pos2.line - pos1.line);
                 const emptyLinesRequired = lineCount < requiredlineCount;
                 const edit = new vscode.WorkspaceEdit();
-                if (emptyLinesRequired) {
-                    for (let currentLine = lineCount; currentLine < requiredlineCount - 1; currentLine++) {
-                        edit.insert(editor.document.uri, new vscode.Position(currentLine, 0), '\n');
-                    }
-                }
                 //replace text
                 for (let currentLine = pos1.line; currentLine <= pos2.line; currentLine++) {
                     const currentPos1 = new vscode.Position(currentLine, pos1.character);
@@ -34,13 +29,52 @@ function activate(context) {
                     edit.replace(editor.document.uri, new vscode.Range(currentPos1, currentPos2), "");
                 }
                 //insert the text at desired position
-                for (let i = 0; i < lines.length; i++) {
-                    if (emptyLinesRequired) {
-                        const line = lines[i];
-                        edit.insert(editor.document.uri, movePos, "\n" + line);
-                        movePos = new vscode.Position(movePos.line + 1, movePos.character);
+                //text exceeds linecount and is the bottom text
+                if (emptyLinesRequired && movePos.line >= lineCount) {
+                    let counter = 0;
+                    for (let currentLine = lineCount; currentLine <= requiredlineCount; currentLine++) {
+                        if (currentLine >= movePos.line) {
+                            const line = lines[counter];
+                            counter += 1;
+                            edit.insert(editor.document.uri, new vscode.Position(currentLine, 0), '\n' + line);
+                        }
+                        else {
+                            edit.insert(editor.document.uri, new vscode.Position(currentLine, 0), '\n');
+                        }
                     }
-                    else {
+                }
+                //text exceeds linecount but is not bottom text
+                else if (emptyLinesRequired && movePos.line < lineCount) {
+                    //remove all lines at the bottom so we can relocate them
+                    let bottomLines = [];
+                    for (let currentLine = lineCount; currentLine >= movePos.line; currentLine--) {
+                        const currentPos1 = new vscode.Position(currentLine, 0);
+                        const currentPos2 = new vscode.Position(currentLine, 100);
+                        const line = editor.document.getText(new vscode.Range(currentPos1, currentPos2));
+                        bottomLines.push(line);
+                        edit.delete(editor.document.uri, new vscode.Range(currentPos1, currentPos2));
+                    }
+                    //add new lines
+                    let bigString = "";
+                    for (let i = 0; i < lines.length; i++) {
+                        bigString += lines[i] + "\n";
+                    }
+                    edit.insert(editor.document.uri, new vscode.Position(movePos.line, 0), bigString);
+                    let bottomBigString = "";
+                    for (let i = bottomLines.length - 1; i >= 0; i--) {
+                        if (i !== 0) {
+                            bottomBigString += bottomLines[i] + "\n";
+                        }
+                        else {
+                            bottomBigString += bottomLines[i];
+                        }
+                    }
+                    edit.insert(editor.document.uri, new vscode.Position(movePos.line, 0), bottomBigString);
+                }
+                //text does not exceed the linecount
+                //TODO: Make it so that text does not overlap with other text
+                else {
+                    for (let i = 0; i < lines.length; i++) {
                         const line = lines[i];
                         edit.insert(editor.document.uri, movePos, line);
                         movePos = new vscode.Position(movePos.line + 1, movePos.character);
