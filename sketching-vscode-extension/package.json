@@ -22,7 +22,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && mv ./src/sketching_api_pb.js ./out && mv ./src/sketching_api_grpc_pb.js ./out",
+    "compile": "tsc -p ./ && cp ./src/sketching_api_pb.js ./out && cp ./src/sketching_api_grpc_pb.js ./out",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
