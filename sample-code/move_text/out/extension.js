@@ -20,13 +20,13 @@ function activate(context) {
                 const requiredlineCount = movePos.line + (pos2.line - pos1.line);
                 const emptyLinesRequired = lineCount < requiredlineCount;
                 const edit = new vscode.WorkspaceEdit();
-                //replace text
+                //replace selected text for ""
                 for (let currentLine = pos1.line; currentLine <= pos2.line; currentLine++) {
                     const currentPos1 = new vscode.Position(currentLine, pos1.character);
                     const currentPos2 = new vscode.Position(currentLine, pos2.character);
                     const line = editor.document.getText(new vscode.Range(currentPos1, currentPos2));
                     lines.push(line);
-                    edit.replace(editor.document.uri, new vscode.Range(currentPos1, currentPos2), "");
+                    edit.delete(editor.document.uri, new vscode.Range(currentPos1, currentPos2));
                 }
                 //insert the text at desired position
                 //text exceeds linecount and is the bottom text
@@ -49,30 +49,29 @@ function activate(context) {
                     let bottomLines = [];
                     for (let currentLine = lineCount; currentLine >= movePos.line; currentLine--) {
                         const currentPos1 = new vscode.Position(currentLine, 0);
-                        const currentPos2 = new vscode.Position(currentLine, 100);
+                        const currentPos2 = new vscode.Position(currentLine + 1, 0);
                         const line = editor.document.getText(new vscode.Range(currentPos1, currentPos2));
                         bottomLines.push(line);
                         edit.delete(editor.document.uri, new vscode.Range(currentPos1, currentPos2));
                     }
-                    //add new lines
-                    let bigString = "";
+                    //Insert selected lines into new position
+                    let selectedLines = "";
                     for (let i = 0; i < lines.length; i++) {
-                        bigString += lines[i] + "\n";
-                    }
-                    edit.insert(editor.document.uri, new vscode.Position(movePos.line, 0), bigString);
-                    let bottomBigString = "";
-                    for (let i = bottomLines.length - 1; i >= 0; i--) {
-                        if (i !== 0) {
-                            bottomBigString += bottomLines[i] + "\n";
+                        if (i !== lines.length - 1) {
+                            selectedLines += lines[i] + "\n";
                         }
                         else {
-                            bottomBigString += bottomLines[i];
+                            selectedLines += lines[i];
                         }
                     }
-                    edit.insert(editor.document.uri, new vscode.Position(movePos.line, 0), bottomBigString);
+                    edit.insert(editor.document.uri, new vscode.Position(movePos.line, 0), selectedLines);
+                    let bottomLinesString = "";
+                    for (let i = bottomLines.length - 1; i >= 0; i--) {
+                        bottomLinesString += bottomLines[i];
+                    }
+                    edit.insert(editor.document.uri, new vscode.Position(movePos.line, 0), bottomLinesString);
                 }
                 //text does not exceed the linecount
-                //TODO: Make it so that text does not overlap with other text
                 else {
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i];
@@ -88,7 +87,26 @@ function activate(context) {
             }
         }
         else {
-            vscode.window.showErrorMessage("Inputs failed");
+            vscode.window.showErrorMessage("Inputs failed!");
+        }
+    }));
+    // command that deletes all lines.
+    context.subscriptions.push(vscode.commands.registerCommand('move_text.remove_all_lines', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+            const lines = editor.document.lineCount;
+            let edit = new vscode.WorkspaceEdit();
+            for (let i = lines - 1; i >= 0; i--) {
+                const currentPos1 = new vscode.Position(i, 0);
+                const currentPos2 = new vscode.Position(i + 1, 0);
+                const range = new vscode.Range(currentPos1, currentPos2);
+                edit.delete(editor.document.uri, range);
+            }
+            await vscode.workspace.applyEdit(edit);
+            vscode.window.showInformationMessage("Lines succesfully deleted!");
+        }
+        else {
+            vscode.window.showErrorMessage("No active editor found!");
         }
     }));
 }
