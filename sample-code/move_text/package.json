@@ -17,6 +17,12 @@
         "command": "move_text.rectangle",
         "title": "Move text in rectangle",
         "category": "move_text"
+      },
+      {
+        "command": "move_text.remove_all_lines",
+        "title": "Remove all text",
+        "category": "move_text"
+
       }
     ]
   },
