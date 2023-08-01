@@ -11,6 +11,12 @@ function activate(context) {
         cordinates.push((await vscode.window.showInputBox({ prompt: 'Enter cordinate 2', placeHolder: "x,y" }))?.split(',').map(Number));
         cordinates.push((await vscode.window.showInputBox({ prompt: 'Enter moving cordinate', placeHolder: "x,y" }))?.split(',').map(Number));
         if ((cordinates[0]?.length === 2) && (cordinates[1]?.length === 2) && (cordinates[2]?.length === 2)) {
+            for (let i = 0; i < cordinates.length; i++) {
+                if (cordinates[i]?.some((num) => num < 0)) {
+                    vscode.window.showErrorMessage("Cordinates can't be negative!");
+                    return;
+                }
+            }
             const pos1 = new vscode.Position(cordinates[0][0], cordinates[0][1]);
             const pos2 = new vscode.Position(cordinates[1][0], cordinates[1][1]);
             let movePos = new vscode.Position(cordinates[2][0], cordinates[2][1]);
@@ -83,11 +89,11 @@ function activate(context) {
                 vscode.window.showInformationMessage("Text successfully moved!");
             }
             else {
-                vscode.window.showErrorMessage("No active editor found!");
+                vscode.window.showErrorMessage("No active text editor found! Select a text editor to continue.");
             }
         }
         else {
-            vscode.window.showErrorMessage("Inputs failed!");
+            vscode.window.showErrorMessage("Invalid input. Please provide valid values.");
         }
     }));
     // command that deletes all lines.
