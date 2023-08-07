@@ -146,6 +146,7 @@ registerSingleton(IContextKeyService, ContextKeyService, InstantiationType.Delay
 registerSingleton(ITextResourceConfigurationService, TextResourceConfigurationService, InstantiationType.Delayed);
 registerSingleton(IDownloadService, DownloadService, InstantiationType.Delayed);
 registerSingleton(IOpenerService, OpenerService, InstantiationType.Delayed);
+registerSingleton(ISketchingService, SketchingService, InstantiationType.Delayed);
 
 //#endregion
 
@@ -364,5 +365,6 @@ import 'vs/workbench/contrib/bracketPairColorizer2Telemetry/browser/bracketPairC
 
 // Accessibility
 import 'vs/workbench/contrib/accessibility/browser/accessibility.contribution';
+import { ISketchingService, SketchingService } from 'vs/base/common/sketchingService';
 
 //#endregion
